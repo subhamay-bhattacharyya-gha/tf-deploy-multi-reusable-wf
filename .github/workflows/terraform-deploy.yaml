@@ -42,13 +42,13 @@ jobs:
           tflint-format: "compact"
 
   terraform-validate:
-    name: Terraform Validate - ${{ inputs.cloud-provider }}
+    name: ✅ Terraform Validate - ${{ inputs.cloud-provider }}
     runs-on: ubuntu-latest
     needs: 
       - terraform-lint
 
     steps:
-      - name: ✅ Terraform Validate 
+      - name: Terraform Validate 
         uses: subhamay-bhattacharyya-gha/tf-validate-action@feature/GHA-0032-implement-terraform-state
         with:
           terraform-dir: infra/${{ inputs.cloud-provider }}/tf
