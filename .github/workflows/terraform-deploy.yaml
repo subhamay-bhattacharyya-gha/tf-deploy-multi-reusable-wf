@@ -14,7 +14,7 @@ on:
 
 jobs:
   terraform-lint:
-    name: Terraform Deploy - ${{ inputs.cloud-provider }}
+    name: ⚙️ Terraform Lint - ${{ inputs.cloud-provider }}
     runs-on: ubuntu-latest
     
     steps:
@@ -48,7 +48,7 @@ jobs:
       - terraform-lint
 
     steps:
-      - name: Terraform Validate 
+      - name: ✅ Terraform Validate 
         uses: subhamay-bhattacharyya-gha/tf-validate-action@feature/GHA-0032-implement-terraform-state
         with:
           terraform-dir: infra/${{ inputs.cloud-provider }}/tf
