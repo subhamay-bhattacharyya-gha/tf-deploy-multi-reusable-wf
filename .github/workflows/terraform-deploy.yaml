@@ -34,7 +34,7 @@ jobs:
           echo "Valid cloud provider: ${{ inputs.cloud-provider }}"
 
       - name: Run TFLint
-        uses: subhamay-bhattacharyya-gha/tf-lint-action@feature/GHA-0030-add-debug-info-and-remove
+        uses: subhamay-bhattacharyya-gha/tf-lint-action@main
         with:
           terraform-dir: infra/${{ inputs.cloud-provider }}/tf
           tflint-ver: ${{ inputs.tflint-ver }}
