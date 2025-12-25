@@ -7,10 +7,10 @@ on:
         description: "Target cloud provider (aws, gcp, azure)"
         required: true
         type: string
-      tflint-ver:
-        description: "TFLint version to install"
-        required: true
-        type: string
+      # tflint-ver:
+      #   description: "TFLint version to install"
+      #   required: true
+      #   type: string
 
 jobs:
   terraform-deploy:
@@ -22,7 +22,7 @@ jobs:
         run: |
           echo "=== Workflow Inputs ==="
           echo "Cloud Provider: ${{ inputs.cloud-provider }}"
-          echo "TFLint Version: ${{ inputs.tflint-ver }}"
+          # echo "TFLint Version: ${{ inputs.tflint-ver }}"
           echo "======================="
 
       - name: Validate Cloud Provider
@@ -38,6 +38,6 @@ jobs:
         with:
           terraform-dir: infra/${{ inputs.cloud-provider }}/tf
           # release-tag: ""
-          tflint-ver: ${{ inputs.tflint-ver }}
+          # tflint-ver: ${{ inputs.tflint-ver }}
           use-cache: "true"
           tflint-format: "compact"
