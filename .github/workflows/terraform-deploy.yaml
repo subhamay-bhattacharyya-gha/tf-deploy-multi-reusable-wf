@@ -7,6 +7,10 @@ on:
         description: 'Target cloud provider (aws, gcp, azure)'
         required: true
         type: string
+      tflint-version:
+        description: 'Terraform linter version'
+        required: true
+        type: string
 
 jobs:
   terraform-deploy:
@@ -21,3 +25,12 @@ jobs:
             exit 1
           fi
           echo "Valid cloud provider: ${{ inputs.cloud-provider }}"
+
+      - name: Run TFLint
+        uses: subhamay-bhattacharyya-gha/tf-lint-action@feature/GHA-0030-add-debug-info-and-remove
+        with:
+          terraform-dir: infra/${{ inputs.cloud-provider }}/tf
+          # release-tag: ""
+          tflint-ver: ${{ inputs.tflint-version }}
+          use-cache: "true"
+          tflint-format: "compact"
