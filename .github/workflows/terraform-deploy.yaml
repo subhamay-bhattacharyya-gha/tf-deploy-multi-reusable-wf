@@ -139,7 +139,7 @@ jobs:
 
     steps:
       - name: Terraform Apply 
-        uses: subhamay-bhattacharyya-gha/tf-apply-action@feature/GHA-0031-add-multi-cloud-support
+        uses: subhamay-bhattacharyya-gha/tf-apply-action@main
         with:
           cloud-provider: ${{ inputs.cloud-provider }}
           terraform-dir: infra/${{ inputs.cloud-provider }}/tf
