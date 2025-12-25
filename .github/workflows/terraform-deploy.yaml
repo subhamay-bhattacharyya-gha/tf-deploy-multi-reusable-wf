@@ -18,6 +18,13 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - name: Print Inputs
+        run: |
+          echo "=== Workflow Inputs ==="
+          echo "Cloud Provider: ${{ inputs.cloud-provider }}"
+          echo "TFLint Version: ${{ inputs.tflint-version }}"
+          echo "======================="
+
       - name: Validate Cloud Provider
         run: |
           if [[ "${{ inputs.cloud-provider }}" != "aws" && "${{ inputs.cloud-provider }}" != "gcp" && "${{ inputs.cloud-provider }}" != "azure" ]]; then
