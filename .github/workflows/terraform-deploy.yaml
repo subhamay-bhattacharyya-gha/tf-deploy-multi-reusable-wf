@@ -49,6 +49,6 @@ jobs:
 
     steps:
       - name: Terraform Validate 
-        uses: subhamay-bhattacharyya-gha/tf-validate-action@feature/GHA-0032-implement-terraform-state
+        uses: subhamay-bhattacharyya-gha/tf-validate-action@main
         with:
           terraform-dir: infra/${{ inputs.cloud-provider }}/tf
