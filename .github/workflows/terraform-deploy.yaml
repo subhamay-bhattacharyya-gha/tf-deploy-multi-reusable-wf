@@ -119,7 +119,7 @@ jobs:
           terraform-dir: infra/${{ inputs.cloud-provider }}/tf
 
   terraform-plan:
-    name: ✅ plan - ${{ inputs.cloud-provider }}
+    name: 🔍 plan - ${{ inputs.cloud-provider }}
     runs-on: ubuntu-latest
     needs: 
       - terraform-validate
