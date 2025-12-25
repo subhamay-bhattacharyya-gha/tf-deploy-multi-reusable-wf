@@ -13,7 +13,7 @@ on:
         type: string
 
 jobs:
-  terraform-deploy:
+  terraform-lint:
     name: Terraform Deploy - ${{ inputs.cloud-provider }}
     runs-on: ubuntu-latest
     
@@ -37,7 +37,16 @@ jobs:
         uses: subhamay-bhattacharyya-gha/tf-lint-action@feature/GHA-0030-add-debug-info-and-remove
         with:
           terraform-dir: infra/${{ inputs.cloud-provider }}/tf
-          # release-tag: ""
           tflint-ver: ${{ inputs.tflint-ver }}
           use-cache: "true"
           tflint-format: "compact"
+
+  terraform-validate:
+    name: Terraform Validate - ${{ inputs.cloud-provider }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Terraform Validate 
+        uses: subhamay-bhattacharyya-gha/tf-validate-action@feature/GHA-0032-implement-terraform-state
+        with:
+          terraform-dir: infra/${{ inputs.cloud-provider }}/tf
