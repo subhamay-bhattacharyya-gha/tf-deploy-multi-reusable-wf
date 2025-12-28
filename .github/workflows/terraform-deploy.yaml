@@ -42,26 +42,26 @@ on:
         required: false
 
       # GCP Authentication Secrets
-      # gcp-wif-provider:
-      #   description: "GCP Workload Identity Federation provider. Required when cloud-provider is 'gcp'."
-      #   required: false
+      gcp-wif-provider:
+        description: "GCP Workload Identity Federation provider. Required when cloud-provider is 'gcp'."
+        required: false
 
-      # gcp-service-account:
-      #   description: "GCP service account email for authentication. Required when cloud-provider is 'gcp'."
-      #   required: false
+      gcp-service-account:
+        description: "GCP service account email for authentication. Required when cloud-provider is 'gcp'."
+        required: false
 
-      # # Azure Authentication Secrets
-      # azure-client-id:
-      #   description: "Azure client ID for authentication. Required when cloud-provider is 'azure'."
-      #   required: false
+      # Azure Authentication Secrets
+      azure-client-id:
+        description: "Azure client ID for authentication. Required when cloud-provider is 'azure'."
+        required: false
 
-      # azure-tenant-id:
-      #   description: "Azure tenant ID for authentication. Required when cloud-provider is 'azure'."
-      #   required: false
+      azure-tenant-id:
+        description: "Azure tenant ID for authentication. Required when cloud-provider is 'azure'."
+        required: false
 
-      # azure-subscription-id:
-      #   description: "Azure subscription ID for authentication. Required when cloud-provider is 'azure'."
-      #   required: false
+      azure-subscription-id:
+        description: "Azure subscription ID for authentication. Required when cloud-provider is 'azure'."
+        required: false
 
 jobs:
   terraform-lint:
@@ -129,6 +129,11 @@ jobs:
           tfc-token: ${{ secrets.tfc-token }}
           aws-region: ${{ inputs.aws-region }}
           aws-role-to-assume: ${{ secrets.aws-role-to-assume }}
+          gcp-wif-provider: ${{ secrets.gcp-wif-provider }}
+          gcp-service-account: ${{ secrets.gcp-service-account }}
+          azure-client-id: ${{ secrets.azure-client-id }}
+          azure-tenant-id: ${{ secrets.azure-tenant-id }}
+          azure-subscription-id: ${{ secrets.azure-subscription-id }}
           tf-vars-file: ${{ inputs.tf-vars-file }}
 
   terraform-apply:
@@ -147,4 +152,9 @@ jobs:
           tfc-token: ${{ secrets.tfc-token }}
           aws-region: ${{ inputs.aws-region }}
           aws-role-to-assume: ${{ secrets.aws-role-to-assume }}
+          gcp-wif-provider: ${{ secrets.gcp-wif-provider }}
+          gcp-service-account: ${{ secrets.gcp-service-account }}
+          azure-client-id: ${{ secrets.azure-client-id }}
+          azure-tenant-id: ${{ secrets.azure-tenant-id }}
+          azure-subscription-id: ${{ secrets.azure-subscription-id }}
           tf-vars-file: ${{ inputs.tf-vars-file }}
