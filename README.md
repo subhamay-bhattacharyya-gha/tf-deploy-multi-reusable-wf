@@ -1,12 +1,12 @@
 # Terraform Multi-Cloud Deploy - Reusable Workflow
 
-![Release](https://github.com/subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf/actions/workflows/release.yaml/badge.svg)&nbsp;![Built with Kiro.dev](https://img.shields.io/badge/Built_with-Kiro.dev-brightgreen?logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMCA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDQgOUwxMC45MSA4LjI2TDEyIDJaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K)&nbsp;![Terraform](https://img.shields.io/badge/Terraform-7B42BC?logo=terraform&logoColor=white)&nbsp;![Release](https://github.com/subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf/actions/workflows/release.yaml/badge.svg)&nbsp;![Commit Activity](https://img.shields.io/github/commit-activity/t/subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf)&nbsp;![Last Commit](https://img.shields.io/github/last-commit/subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf)&nbsp;![Release Date](https://img.shields.io/github/release-date/subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf)&nbsp;![Repo Size](https://img.shields.io/github/repo-size/subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf)&nbsp;![File Count](https://img.shields.io/github/directory-file-count/subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf)&nbsp;![Issues](https://img.shields.io/github/issues/subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf)&nbsp;![Top Language](https://img.shields.io/github/languages/top/subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf)&nbsp;![Custom Endpoint](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/bsubhamay/6125245a1d33510d9854603260f16eee/raw/tf-deploy-multi-reusable-wf.json?)
+![Built with Kiro.dev](https://img.shields.io/badge/Built_with-Kiro.dev-brightgreen?logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMCA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDQgOUwxMC45MSA4LjI2TDEyIDJaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K)&nbsp;![Terraform](https://img.shields.io/badge/Terraform-7B42BC?logo=terraform&logoColor=white)&nbsp;![Release](https://github.com/subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf/actions/workflows/release.yaml/badge.svg)&nbsp;![Commit Activity](https://img.shields.io/github/commit-activity/t/subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf)&nbsp;![Last Commit](https://img.shields.io/github/last-commit/subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf)&nbsp;![Release Date](https://img.shields.io/github/release-date/subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf)&nbsp;![Repo Size](https://img.shields.io/github/repo-size/subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf)&nbsp;![File Count](https://img.shields.io/github/directory-file-count/subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf)&nbsp;![Issues](https://img.shields.io/github/issues/subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf)&nbsp;![Top Language](https://img.shields.io/github/languages/top/subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf)&nbsp;![Custom Endpoint](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/bsubhamay/06e35985280456b113298ed56c626e73/raw/tf-deploy-multi-reusable-wf.json?)
 
-A reusable GitHub Actions workflow for deploying Terraform infrastructure across multiple cloud providers (AWS, GCP, Azure) with comprehensive validation, linting, and deployment capabilities.
+A reusable GitHub Actions workflow for deploying Terraform infrastructure across multiple cloud providers (AWS, GCP, Azure, Snowflake, Databricks) with comprehensive validation, linting, and deployment capabilities.
 
 ## 🚀 Features
 
-- **Multi-Cloud Support**: Deploy to AWS, Google Cloud Platform, or Microsoft Azure
+- **Multi-Cloud Support**: Deploy to AWS, Google Cloud Platform, Microsoft Azure, Snowflake, or Databricks
 - **Comprehensive Pipeline**: Automated linting, validation, planning, and deployment
 - **Flexible Backend**: Support for both S3 and HCP Terraform Cloud backends
 - **Security First**: All sensitive credentials handled as secrets
@@ -28,7 +28,7 @@ The workflow consists of four sequential jobs:
 
 | Input | Description | Type | Required |
 |-------|-------------|------|----------|
-| `cloud-provider` | Target cloud provider (`aws`, `gcp`, `azure`) | string | ✅ |
+| `cloud-provider` | Target cloud provider (`aws`, `gcp`, `azure`, `snowflake`, `databricks`) | string | ✅ |
 | `tflint-ver` | TFLint version to install | string | ✅ |
 
 ### Optional Inputs
@@ -37,6 +37,9 @@ The workflow consists of four sequential jobs:
 |-------|-------------|------|---------|
 | `backend-type` | Backend type (`s3` or `remote` for HCP Terraform Cloud) | string | `s3` |
 | `aws-region` | AWS region for authentication | string | - |
+| `snowflake-account` | Snowflake account identifier | string | - |
+| `snowflake-user` | Snowflake user name | string | - |
+| `snowflake-role` | Snowflake role name | string | - |
 | `tf-vars-file` | Terraform variables file path | string | `terraform.tfvars` |
 
 ## 🔐 Secrets
@@ -64,6 +67,17 @@ The workflow consists of four sequential jobs:
 | `azure-tenant-id` | Azure tenant ID | `cloud-provider` is `azure` |
 | `azure-subscription-id` | Azure subscription ID | `cloud-provider` is `azure` |
 
+### Snowflake Authentication
+| Secret | Description | Required When |
+|--------|-------------|---------------|
+| `snowflake-private-key` | Snowflake private key for authentication | `cloud-provider` is `snowflake` |
+
+### Databricks Authentication
+| Secret | Description | Required When |
+|--------|-------------|---------------|
+| `databricks-host` | Databricks workspace URL | `cloud-provider` is `databricks` |
+| `databricks-token` | Databricks personal access token | `cloud-provider` is `databricks` |
+
 ## 📁 Expected Directory Structure
 
 The workflow expects your Terraform files to be organized as follows:
@@ -81,7 +95,17 @@ your-repo/
 │   │       ├── main.tf
 │   │       ├── variables.tf
 │   │       └── terraform.tfvars
-│   └── azure/
+│   ├── azure/
+│   │   └── tf/
+│   │       ├── main.tf
+│   │       ├── variables.tf
+│   │       └── terraform.tfvars
+│   ├── snowflake/
+│   │   └── tf/
+│   │       ├── main.tf
+│   │       ├── variables.tf
+│   │       └── terraform.tfvars
+│   └── databricks/
 │       └── tf/
 │           ├── main.tf
 │           ├── variables.tf
@@ -160,6 +184,50 @@ jobs:
       azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 ```
 
+### Snowflake Deployment
+
+```yaml
+name: Deploy to Snowflake
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    uses: subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf/.github/workflows/terraform-deploy.yaml@main
+    with:
+      cloud-provider: snowflake
+      tflint-ver: v0.52.0
+      backend-type: remote
+      snowflake-account: myaccount
+      snowflake-user: terraform_user
+      snowflake-role: TERRAFORM_ROLE
+    secrets:
+      tfc-token: ${{ secrets.TF_CLOUD_TOKEN }}
+      snowflake-private-key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+```
+
+### Databricks Deployment
+
+```yaml
+name: Deploy to Databricks
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    uses: subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf/.github/workflows/terraform-deploy.yaml@main
+    with:
+      cloud-provider: databricks
+      tflint-ver: v0.52.0
+      backend-type: s3
+    secrets:
+      databricks-host: ${{ secrets.DATABRICKS_HOST }}
+      databricks-token: ${{ secrets.DATABRICKS_TOKEN }}
+```
+
 ## 🔧 Prerequisites
 
 ### For AWS
@@ -177,6 +245,16 @@ jobs:
 - Create a service principal
 - Assign necessary permissions to the service principal
 
+### For Snowflake
+- Create a Snowflake user for Terraform
+- Generate RSA key pair for authentication
+- Assign appropriate role and privileges
+
+### For Databricks
+- Create a Databricks workspace
+- Generate a personal access token
+- Configure workspace permissions
+
 ### For HCP Terraform Cloud
 - Create a Terraform Cloud account
 - Generate an API token
@@ -189,6 +267,8 @@ jobs:
 - Follow the **principle of least privilege** when setting up cloud permissions
 - Regularly **rotate your credentials** and tokens
 - Use **OIDC providers** where possible instead of long-lived credentials
+- For Snowflake, use **key-pair authentication** instead of passwords
+- For Databricks, use **service principals** or **OAuth tokens** when available
 
 ## 🤝 Contributing
 

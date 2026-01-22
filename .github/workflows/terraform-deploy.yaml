@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       cloud-provider:
-        description: "Target cloud provider (aws, gcp, azure)"
+        description: "Target cloud provider (aws, gcp, azure, snowflake, databricks)"
         required: true
         type: string
       tflint-ver:
@@ -23,6 +23,27 @@ on:
         description: "AWS region for authentication. Required when cloud-provider is 'aws'."
         required: false
         type: string
+
+      # Snowflake Authentication Inputs
+      snowflake-account:
+        description: "Snowflake account identifier. Required when cloud-provider is 'snowflake'."
+        required: false
+        type: string
+
+      snowflake-user:
+        description: "Snowflake user name. Required when cloud-provider is 'snowflake'."
+        required: false
+        type: string
+
+      snowflake-role:
+        description: "Snowflake role name. Required when cloud-provider is 'snowflake'."
+        required: false
+        type: string
+
+      # (snowflake-private-key moved to secrets section)
+
+      # Databricks Authentication Inputs
+      # (databricks-host and databricks-token moved to secrets section)
 
       # Terraform artifacts
       tf-vars-file:
@@ -63,27 +84,65 @@ on:
         description: "Azure subscription ID for authentication. Required when cloud-provider is 'azure'."
         required: false
 
+      # Snowflake Authentication Secrets
+      snowflake-private-key:
+        description: "Snowflake private key for authentication. Required when cloud-provider is 'snowflake'."
+        required: false
+
+      # Databricks Authentication Secrets
+      databricks-host:
+        description: "Databricks workspace URL. Required when cloud-provider is 'databricks'."
+        required: false
+
+      databricks-token:
+        description: "Databricks personal access token. Required when cloud-provider is 'databricks'."
+        required: false
+
 jobs:
   terraform-lint:
     name: ⚙️ TFLint - ${{ inputs.cloud-provider }}
     runs-on: ubuntu-latest
     
     steps:
-      - name: Print Inputs
+      # Print all inputs for debug
+      #############################################
+      - name: Debug - Print All Inputs
+        id: debug-inputs
+        shell: bash
         run: |
-          echo "=== Workflow Inputs ==="
-          echo "Cloud Provider: ${{ inputs.cloud-provider }}"
-          echo "TFLint Version: ${{ inputs.tflint-ver }}"
-          echo "Backend Type: ${{ inputs.backend-type }}"
-          echo "TFC Token: ${{ secrets.tfc-token && '[PROVIDED]' || '[NOT PROVIDED]' }}"
-          echo "AWS Region: ${{ inputs.aws-region }}"
-          echo "AWS Role to Assume: ${{ secrets.aws-role-to-assume && '[PROVIDED]' || '[NOT PROVIDED]' }}"
-          echo "GCP WIF Provider: ${{ secrets.gcp-wif-provider && '[PROVIDED]' || '[NOT PROVIDED]' }}"
-          echo "GCP Service Account: ${{ secrets.gcp-service-account && '[PROVIDED]' || '[NOT PROVIDED]' }}"
-          echo "Azure Client ID: ${{ secrets.azure-client-id && '[PROVIDED]' || '[NOT PROVIDED]' }}"
-          echo "Azure Tenant ID: ${{ secrets.azure-tenant-id && '[PROVIDED]' || '[NOT PROVIDED]' }}"
-          echo "Azure Subscription ID: ${{ secrets.azure-subscription-id && '[PROVIDED]' || '[NOT PROVIDED]' }}"
-          echo "======================="
+          echo "=== DEBUG: All Action Inputs ==="
+          echo "backend-type: ${{ inputs.backend-type }}"
+          echo "cloud-provider: ${{ inputs.cloud-provider }}"
+          echo "terraform-dir: infra/${{ inputs.cloud-provider }}/tf"
+          echo "tflint-ver: ${{ inputs.tflint-ver }}"
+          echo "tf-vars-file: ${{ inputs.tf-vars-file }}"
+          echo ""
+          echo "=== HCP Terraform Cloud Inputs ==="
+          echo "tfc-token: [REDACTED - $(if [[ -n '${{ secrets.tfc-token }}' ]]; then echo 'PROVIDED'; else echo 'NOT PROVIDED'; fi)]"
+          echo ""
+          echo "=== AWS Authentication Inputs ==="
+          echo "aws-region: ${{ inputs.aws-region }}"
+          echo "aws-role-to-assume: [REDACTED - $(if [[ -n '${{ secrets.aws-role-to-assume }}' ]]; then echo 'PROVIDED'; else echo 'NOT PROVIDED'; fi)]"
+          echo ""
+          echo "=== GCP Authentication Inputs ==="
+          echo "gcp-wif-provider: [REDACTED - $(if [[ -n '${{ secrets.gcp-wif-provider }}' ]]; then echo 'PROVIDED'; else echo 'NOT PROVIDED'; fi)]"
+          echo "gcp-service-account: [REDACTED - $(if [[ -n '${{ secrets.gcp-service-account }}' ]]; then echo 'PROVIDED'; else echo 'NOT PROVIDED'; fi)]"
+          echo ""
+          echo "=== Azure Authentication Inputs ==="
+          echo "azure-client-id: [REDACTED - $(if [[ -n '${{ secrets.azure-client-id }}' ]]; then echo 'PROVIDED'; else echo 'NOT PROVIDED'; fi)]"
+          echo "azure-tenant-id: [REDACTED - $(if [[ -n '${{ secrets.azure-tenant-id }}' ]]; then echo 'PROVIDED'; else echo 'NOT PROVIDED'; fi)]"
+          echo "azure-subscription-id: [REDACTED - $(if [[ -n '${{ secrets.azure-subscription-id }}' ]]; then echo 'PROVIDED'; else echo 'NOT PROVIDED'; fi)]"
+          echo ""
+          echo "=== Snowflake Authentication Inputs ==="
+          echo "snowflake-account: ${{ inputs.snowflake-account }}"
+          echo "snowflake-user: ${{ inputs.snowflake-user }}"
+          echo "snowflake-role: ${{ inputs.snowflake-role }}"
+          echo "snowflake-private-key: [REDACTED - $(if [[ -n '${{ secrets.snowflake-private-key }}' ]]; then echo 'PROVIDED'; else echo 'NOT PROVIDED'; fi)]"
+          echo ""
+          echo "=== Databricks Authentication Inputs ==="
+          echo "databricks-host: ${{ inputs.databricks-host }}"
+          echo "databricks-token: [REDACTED - $(if [[ -n '${{ secrets.databricks-token }}' ]]; then echo 'PROVIDED'; else echo 'NOT PROVIDED'; fi)]"
+          echo "================================="
 
       - name: Validate Cloud Provider
         run: |
@@ -121,7 +180,7 @@ jobs:
 
     steps:
       - name: Terraform Plan 
-        uses: subhamay-bhattacharyya-gha/tf-plan-action@main
+        uses: subhamay-bhattacharyya-gha/tf-plan-action@feature/GHA-0044-enhancement-add-snowflake
         with:
           cloud-provider: ${{ inputs.cloud-provider }}
           terraform-dir: infra/${{ inputs.cloud-provider }}/tf
@@ -134,6 +193,12 @@ jobs:
           azure-client-id: ${{ secrets.azure-client-id }}
           azure-tenant-id: ${{ secrets.azure-tenant-id }}
           azure-subscription-id: ${{ secrets.azure-subscription-id }}
+          snowflake-account: ${{ inputs.snowflake-account }}
+          snowflake-user: ${{ inputs.snowflake-user }}
+          snowflake-role: ${{ inputs.snowflake-role }}
+          snowflake-private-key: ${{ secrets.snowflake-private-key }}
+          databricks-host: ${{ secrets.databricks-host }}
+          databricks-token: ${{ secrets.databricks-token }}
           tf-vars-file: ${{ inputs.tf-vars-file }}
 
   terraform-apply:
@@ -144,7 +209,7 @@ jobs:
 
     steps:
       - name: Terraform Apply 
-        uses: subhamay-bhattacharyya-gha/tf-apply-action@main
+        uses: subhamay-bhattacharyya-gha/tf-apply-action@feature/GHA-0037-add-snowflake-and-databri
         with:
           cloud-provider: ${{ inputs.cloud-provider }}
           terraform-dir: infra/${{ inputs.cloud-provider }}/tf
@@ -157,4 +222,10 @@ jobs:
           azure-client-id: ${{ secrets.azure-client-id }}
           azure-tenant-id: ${{ secrets.azure-tenant-id }}
           azure-subscription-id: ${{ secrets.azure-subscription-id }}
+          snowflake-account: ${{ inputs.snowflake-account }}
+          snowflake-user: ${{ inputs.snowflake-user }}
+          snowflake-role: ${{ inputs.snowflake-role }}
+          snowflake-private-key: ${{ secrets.snowflake-private-key }}
+          databricks-host: ${{ secrets.databricks-host }}
+          databricks-token: ${{ secrets.databricks-token }}
           tf-vars-file: ${{ inputs.tf-vars-file }}
