@@ -2,22 +2,23 @@
 
 ![Built with Kiro.dev](https://img.shields.io/badge/Built_with-Kiro.dev-brightgreen?logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMCA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDQgOUwxMC45MSA4LjI2TDEyIDJaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K)&nbsp;![Terraform](https://img.shields.io/badge/Terraform-7B42BC?logo=terraform&logoColor=white)&nbsp;![Release](https://github.com/subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf/actions/workflows/release.yaml/badge.svg)&nbsp;![Commit Activity](https://img.shields.io/github/commit-activity/t/subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf)&nbsp;![Last Commit](https://img.shields.io/github/last-commit/subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf)&nbsp;![Release Date](https://img.shields.io/github/release-date/subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf)&nbsp;![Repo Size](https://img.shields.io/github/repo-size/subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf)&nbsp;![File Count](https://img.shields.io/github/directory-file-count/subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf)&nbsp;![Issues](https://img.shields.io/github/issues/subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf)&nbsp;![Top Language](https://img.shields.io/github/languages/top/subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf)&nbsp;![Custom Endpoint](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/bsubhamay/06e35985280456b113298ed56c626e73/raw/tf-deploy-multi-reusable-wf.json?)
 
-A reusable GitHub Actions workflow for deploying Terraform infrastructure across multiple cloud providers (AWS, GCP, Azure, Snowflake, Databricks) with comprehensive validation, linting, and deployment capabilities.
+A reusable GitHub Actions workflow for deploying Terraform infrastructure across multiple cloud providers and platforms including AWS, GCP, Azure, Snowflake, and Databricks with comprehensive validation, linting, and deployment capabilities.
 
 ## 🚀 Features
 
-- **Multi-Cloud Support**: Deploy to AWS, Google Cloud Platform, Microsoft Azure, Snowflake, or Databricks
+- **Multi-Cloud & Platform Support**: Deploy to AWS, Google Cloud Platform, Microsoft Azure, Snowflake, and Databricks
 - **Comprehensive Pipeline**: Automated linting, validation, planning, and deployment
 - **Flexible Backend**: Support for both S3 and HCP Terraform Cloud backends
 - **Security First**: All sensitive credentials handled as secrets
 - **Validation Pipeline**: TFLint → Terraform Validate → Terraform Plan → Terraform Apply
 - **Reusable Design**: Can be called from any repository workflow
+- **Debug Mode**: Built-in debug step to troubleshoot input and secret configurations
 
 ## 🏗️ Workflow Jobs
 
 The workflow consists of four sequential jobs:
 
-1. **🔧 TFLint** - Lints Terraform code for best practices and errors
+1. **🔧 TFLint** - Lints Terraform code for best practices and errors (includes debug output)
 2. **✅ Validate** - Validates Terraform configuration syntax
 3. **🔍 Plan** - Creates and reviews Terraform execution plan
 4. **🚀 Apply** - Applies the Terraform changes to infrastructure
@@ -248,7 +249,7 @@ jobs:
 ### For Snowflake
 - Create a Snowflake user for Terraform
 - Generate RSA key pair for authentication
-- Assign appropriate role and privileges
+- Assign appropriate role and permissions
 
 ### For Databricks
 - Create a Databricks workspace
@@ -267,8 +268,24 @@ jobs:
 - Follow the **principle of least privilege** when setting up cloud permissions
 - Regularly **rotate your credentials** and tokens
 - Use **OIDC providers** where possible instead of long-lived credentials
-- For Snowflake, use **key-pair authentication** instead of passwords
-- For Databricks, use **service principals** or **OAuth tokens** when available
+- Enable **debug mode** only when troubleshooting (it logs input values but redacts secrets)
+
+## 🐛 Debugging
+
+The workflow includes a built-in debug step that prints all inputs and indicates whether secrets are provided (without exposing their values). This helps troubleshoot configuration issues:
+
+```
+=== DEBUG: All Action Inputs ===
+backend-type: s3
+cloud-provider: aws
+terraform-dir: infra/aws/tf
+tflint-ver: v0.52.0
+tf-vars-file: terraform.tfvars
+
+=== AWS Authentication Inputs ===
+aws-region: us-east-1
+aws-role-to-assume: [REDACTED - PROVIDED]
+```
 
 ## 🤝 Contributing
 

@@ -180,7 +180,7 @@ jobs:
 
     steps:
       - name: Terraform Plan 
-        uses: subhamay-bhattacharyya-gha/tf-plan-action@feature/GHA-0044-enhancement-add-snowflake
+        uses: subhamay-bhattacharyya-gha/tf-plan-action@main
         with:
           cloud-provider: ${{ inputs.cloud-provider }}
           terraform-dir: infra/${{ inputs.cloud-provider }}/tf
@@ -209,7 +209,7 @@ jobs:
 
     steps:
       - name: Terraform Apply 
-        uses: subhamay-bhattacharyya-gha/tf-apply-action@feature/GHA-0037-add-snowflake-and-databri
+        uses: subhamay-bhattacharyya-gha/tf-apply-action@main
         with:
           cloud-provider: ${{ inputs.cloud-provider }}
           terraform-dir: infra/${{ inputs.cloud-provider }}/tf
