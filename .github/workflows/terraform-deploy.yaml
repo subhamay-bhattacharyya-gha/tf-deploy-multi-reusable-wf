@@ -18,6 +18,23 @@ on:
         type: string
         default: "s3"
 
+      # AWS S3 Backend Configuration
+      s3-bucket:
+        description: "Name of the S3 bucket used as the backend for storing the Terraform state file. Required when backend-type is 's3'."
+        required: false
+        type: string
+
+      s3-region:
+        description: "AWS region where the S3 backend bucket is located (e.g., us-east-1, eu-west-1). Required when backend-type is 's3'."
+        required: false
+        type: string
+
+      s3-key-prefix:
+        description: "Optional prefix for the S3 state key (AWS only)."
+        required: false
+        type: string
+        default: ""
+
       # AWS Authentication Inputs
       aws-region:
         description: "AWS region for authentication. Required when cloud-provider is 'aws'."
@@ -134,23 +151,76 @@ jobs:
           echo "azure-subscription-id: [REDACTED - $(if [[ -n '${{ secrets.azure-subscription-id }}' ]]; then echo 'PROVIDED'; else echo 'NOT PROVIDED'; fi)]"
           echo ""
           echo "=== Snowflake Authentication Inputs ==="
-          echo "snowflake-account: ${{ inputs.snowflake-account }}"
-          echo "snowflake-user: ${{ inputs.snowflake-user }}"
-          echo "snowflake-role: ${{ inputs.snowflake-role }}"
+          echo "snowflake-account: [REDACTED - $(if [[ -n '${{ inputs.snowflake-account }}' ]]; then echo 'PROVIDED'; else echo 'NOT PROVIDED'; fi)]"
+          echo "snowflake-user: [REDACTED - $(if [[ -n '${{ inputs.snowflake-user }}' ]]; then echo 'PROVIDED'; else echo 'NOT PROVIDED'; fi)]"
+          echo "snowflake-role: [REDACTED - $(if [[ -n '${{ inputs.snowflake-role }}' ]]; then echo 'PROVIDED'; else echo 'NOT PROVIDED'; fi)]"
           echo "snowflake-private-key: [REDACTED - $(if [[ -n '${{ secrets.snowflake-private-key }}' ]]; then echo 'PROVIDED'; else echo 'NOT PROVIDED'; fi)]"
           echo ""
           echo "=== Databricks Authentication Inputs ==="
-          echo "databricks-host: ${{ inputs.databricks-host }}"
+          echo "databricks-host: [REDACTED - $(if [[ -n '${{ secrets.databricks-host }}' ]]; then echo 'PROVIDED'; else echo 'NOT PROVIDED'; fi)]"
           echo "databricks-token: [REDACTED - $(if [[ -n '${{ secrets.databricks-token }}' ]]; then echo 'PROVIDED'; else echo 'NOT PROVIDED'; fi)]"
           echo "================================="
 
-      - name: Validate Cloud Provider
+      # Validate input configuration
+      #############################################
+      - name: Validate Input Configuration
+        id: validate-config
+        shell: bash
         run: |
-          if [[ "${{ inputs.cloud-provider }}" != "aws" && "${{ inputs.cloud-provider }}" != "gcp" && "${{ inputs.cloud-provider }}" != "azure" ]]; then
-            echo "Error: Invalid cloud provider '${{ inputs.cloud-provider }}'. Must be one of: aws, gcp, azure"
+          # Validate backend configuration
+          if [[ "${{ inputs.backend-type }}" == "s3" ]]; then
+            if [[ -z "${{ inputs.s3-bucket }}" || -z "${{ inputs.s3-region }}" ]]; then
+              echo "Error: s3-bucket and s3-region are required when backend-type is 's3'"
+              exit 1
+            fi
+          elif [[ "${{ inputs.backend-type }}" == "remote" ]]; then
+            if [[ -z "${{ secrets.tfc-token }}" ]]; then
+              echo "Error: tfc-token is required when backend-type is 'remote'"
+              exit 1
+            fi
+            echo "Using existing backend configuration from Terraform files"
+          else
+            echo "Error: backend-type must be either 's3' or 'remote'"
             exit 1
           fi
-          echo "Valid cloud provider: ${{ inputs.cloud-provider }}"
+
+          # Validate cloud provider configuration
+          case "${{ inputs.cloud-provider }}" in
+            "aws")
+              if [[ -z "${{ inputs.aws-region }}" || -z "${{ secrets.aws-role-to-assume }}" ]]; then
+                echo "Error: aws-region and aws-role-to-assume are required when cloud-provider is 'aws'"
+                exit 1
+              fi
+              ;;
+            "gcp")
+              if [[ -z "${{ secrets.gcp-wif-provider }}" || -z "${{ secrets.gcp-service-account }}" ]]; then
+                echo "Error: gcp-wif-provider and gcp-service-account are required when cloud-provider is 'gcp'"
+                exit 1
+              fi
+              ;;
+            "azure")
+              if [[ -z "${{ secrets.azure-client-id }}" || -z "${{ secrets.azure-tenant-id }}" || -z "${{ secrets.azure-subscription-id }}" ]]; then
+                echo "Error: azure-client-id, azure-tenant-id, and azure-subscription-id are required when cloud-provider is 'azure'"
+                exit 1
+              fi
+              ;;
+            "snowflake")
+              if [[ -z "${{ inputs.snowflake-account }}" || -z "${{ inputs.snowflake-user }}" || -z "${{ inputs.snowflake-role }}" || -z "${{ secrets.snowflake-private-key }}" ]]; then
+                echo "Error: snowflake-account, snowflake-user, snowflake-role, and snowflake-private-key are required when cloud-provider is 'snowflake'"
+                exit 1
+              fi
+              ;;
+            "databricks")
+              if [[ -z "${{ secrets.databricks-host }}" || -z "${{ secrets.databricks-token }}" ]]; then
+                echo "Error: databricks-host and databricks-token are required when cloud-provider is 'databricks'"
+                exit 1
+              fi
+              ;;
+            *)
+              echo "Error: cloud-provider must be 'aws', 'gcp', 'azure', 'snowflake', or 'databricks'"
+              exit 1
+              ;;
+          esac
 
       - name: Run TFLint
         uses: subhamay-bhattacharyya-gha/tf-lint-action@main
@@ -185,6 +255,9 @@ jobs:
           cloud-provider: ${{ inputs.cloud-provider }}
           terraform-dir: infra/${{ inputs.cloud-provider }}/tf
           backend-type: ${{ inputs.backend-type }}
+          s3-bucket: ${{ inputs.s3-bucket }}
+          s3-region: ${{ inputs.s3-region }}
+          s3-key-prefix: ${{ inputs.s3-key-prefix }}
           tfc-token: ${{ secrets.tfc-token }}
           aws-region: ${{ inputs.aws-region }}
           aws-role-to-assume: ${{ secrets.aws-role-to-assume }}
