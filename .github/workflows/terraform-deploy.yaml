@@ -422,7 +422,7 @@ jobs:
     steps:
       - name: Terraform Plan 
         if: inputs.cloud-provider != 'platform'
-        uses: subhamay-bhattacharyya-gha/tf-plan-action@main
+        uses: subhamay-bhattacharyya-gha/tf-plan-action@feature/GHA-0047-add-platform-based-multi
         env:
           DATABRICKS_HOST: ${{ secrets.databricks-host }}
           DATABRICKS_TOKEN: ${{ secrets.databricks-token }}
@@ -453,7 +453,7 @@ jobs:
 
       - name: Terraform Plan - AWS
         if: inputs.cloud-provider == 'platform' && hashFiles('infra/aws/tf') != ''
-        uses: subhamay-bhattacharyya-gha/tf-plan-action@main
+        uses: subhamay-bhattacharyya-gha/tf-plan-action@feature/GHA-0047-add-platform-based-multi
         with:
           cloud-provider: aws
           terraform-dir: infra/aws/tf
@@ -468,7 +468,7 @@ jobs:
 
       - name: Terraform Plan - GCP
         if: inputs.cloud-provider == 'platform' && hashFiles('infra/gcp/tf') != ''
-        uses: subhamay-bhattacharyya-gha/tf-plan-action@main
+        uses: subhamay-bhattacharyya-gha/tf-plan-action@feature/GHA-0047-add-platform-based-multi
         with:
           cloud-provider: gcp
           terraform-dir: infra/gcp/tf
@@ -483,7 +483,7 @@ jobs:
 
       - name: Terraform Plan - Azure
         if: inputs.cloud-provider == 'platform' && hashFiles('infra/azure/tf') != ''
-        uses: subhamay-bhattacharyya-gha/tf-plan-action@main
+        uses: subhamay-bhattacharyya-gha/tf-plan-action@feature/GHA-0047-add-platform-based-multi
         with:
           cloud-provider: azure
           terraform-dir: infra/azure/tf
@@ -499,7 +499,7 @@ jobs:
 
       - name: Terraform Plan - Snowflake
         if: inputs.cloud-provider == 'platform' && hashFiles('infra/snowflake/tf') != ''
-        uses: subhamay-bhattacharyya-gha/tf-plan-action@main
+        uses: subhamay-bhattacharyya-gha/tf-plan-action@feature/GHA-0047-add-platform-based-multi
         env:
           SNOWFLAKE_ACCOUNT: ${{ inputs.snowflake-account }}
           SNOWFLAKE_USER: ${{ inputs.snowflake-user }}
@@ -517,7 +517,7 @@ jobs:
 
       - name: Terraform Plan - Databricks
         if: inputs.cloud-provider == 'platform' && hashFiles('infra/databricks/tf') != ''
-        uses: subhamay-bhattacharyya-gha/tf-plan-action@main
+        uses: subhamay-bhattacharyya-gha/tf-plan-action@feature/GHA-0047-add-platform-based-multi
         env:
           DATABRICKS_HOST: ${{ secrets.databricks-host }}
           DATABRICKS_TOKEN: ${{ secrets.databricks-token }}
@@ -540,7 +540,7 @@ jobs:
     steps:
       - name: Terraform Apply 
         if: inputs.cloud-provider != 'platform'
-        uses: subhamay-bhattacharyya-gha/tf-apply-action@main
+        uses: subhamay-bhattacharyya-gha/tf-apply-action@feature/GHA-0039-add-platform-based-multi
         env:
           DATABRICKS_HOST: ${{ secrets.databricks-host }}
           DATABRICKS_TOKEN: ${{ secrets.databricks-token }}
@@ -571,7 +571,7 @@ jobs:
 
       - name: Terraform Apply - AWS
         if: inputs.cloud-provider == 'platform' && hashFiles('infra/aws/tf') != ''
-        uses: subhamay-bhattacharyya-gha/tf-apply-action@main
+        uses: subhamay-bhattacharyya-gha/tf-apply-action@feature/GHA-0039-add-platform-based-multi
         with:
           cloud-provider: aws
           terraform-dir: infra/aws/tf
@@ -586,7 +586,7 @@ jobs:
 
       - name: Terraform Apply - GCP
         if: inputs.cloud-provider == 'platform' && hashFiles('infra/gcp/tf') != ''
-        uses: subhamay-bhattacharyya-gha/tf-apply-action@main
+        uses: subhamay-bhattacharyya-gha/tf-apply-action@feature/GHA-0039-add-platform-based-multi
         with:
           cloud-provider: gcp
           terraform-dir: infra/gcp/tf
@@ -601,7 +601,7 @@ jobs:
 
       - name: Terraform Apply - Azure
         if: inputs.cloud-provider == 'platform' && hashFiles('infra/azure/tf') != ''
-        uses: subhamay-bhattacharyya-gha/tf-apply-action@main
+        uses: subhamay-bhattacharyya-gha/tf-apply-action@feature/GHA-0039-add-platform-based-multi
         with:
           cloud-provider: azure
           terraform-dir: infra/azure/tf
@@ -617,7 +617,7 @@ jobs:
 
       - name: Terraform Apply - Snowflake
         if: inputs.cloud-provider == 'platform' && hashFiles('infra/snowflake/tf') != ''
-        uses: subhamay-bhattacharyya-gha/tf-apply-action@main
+        uses: subhamay-bhattacharyya-gha/tf-apply-action@feature/GHA-0039-add-platform-based-multi
         env:
           SNOWFLAKE_ACCOUNT: ${{ inputs.snowflake-account }}
           SNOWFLAKE_USER: ${{ inputs.snowflake-user }}
@@ -635,7 +635,7 @@ jobs:
 
       - name: Terraform Apply - Databricks
         if: inputs.cloud-provider == 'platform' && hashFiles('infra/databricks/tf') != ''
-        uses: subhamay-bhattacharyya-gha/tf-apply-action@main
+        uses: subhamay-bhattacharyya-gha/tf-apply-action@feature/GHA-0039-add-platform-based-multi
         env:
           DATABRICKS_HOST: ${{ secrets.databricks-host }}
           DATABRICKS_TOKEN: ${{ secrets.databricks-token }}
