@@ -173,6 +173,20 @@ jobs:
         id: validate-config
         shell: bash
         run: |
+          # Validate backend-type input
+          if [[ "${{ inputs.backend-type }}" != "s3" && "${{ inputs.backend-type }}" != "remote" ]]; then
+            echo "Error: Invalid backend-type '${{ inputs.backend-type }}'. Must be either 's3' or 'remote'"
+            exit 1
+          fi
+          echo "✓ Valid backend-type: ${{ inputs.backend-type }}"
+
+          # Validate cloud-provider input
+          if [[ "${{ inputs.cloud-provider }}" != "aws" && "${{ inputs.cloud-provider }}" != "gcp" && "${{ inputs.cloud-provider }}" != "azure" && "${{ inputs.cloud-provider }}" != "snowflake" && "${{ inputs.cloud-provider }}" != "databricks" && "${{ inputs.cloud-provider }}" != "platform" ]]; then
+            echo "Error: Invalid cloud-provider '${{ inputs.cloud-provider }}'. Must be one of: aws, gcp, azure, snowflake, databricks, platform"
+            exit 1
+          fi
+          echo "✓ Valid cloud-provider: ${{ inputs.cloud-provider }}"
+
           # Validate backend configuration
           if [[ "${{ inputs.backend-type }}" == "s3" ]]; then
             if [[ -z "${{ inputs.s3-bucket }}" || -z "${{ inputs.s3-region }}" ]]; then
@@ -185,9 +199,6 @@ jobs:
               exit 1
             fi
             echo "Using existing backend configuration from Terraform files"
-          else
-            echo "Error: backend-type must be either 's3' or 'remote'"
-            exit 1
           fi
 
           # Validate cloud provider configuration
@@ -285,10 +296,6 @@ jobs:
               fi
               
               echo "All detected platform inputs validated successfully"
-              ;;
-            *)
-              echo "Error: cloud-provider must be 'aws', 'gcp', 'azure', 'snowflake', 'databricks', or 'platform'"
-              exit 1
               ;;
           esac
 
