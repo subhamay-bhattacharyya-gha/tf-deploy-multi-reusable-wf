@@ -7,9 +7,11 @@ A reusable GitHub Actions workflow for deploying Terraform infrastructure across
 ## 🚀 Features
 
 - **Multi-Cloud & Platform Support**: Deploy to AWS, GCP, Azure, Snowflake, and Databricks
+- **Platform Mode**: Automatically detect and deploy to all cloud providers in your `infra/` directory
 - **Comprehensive Pipeline**: Automated linting, validation, planning, and deployment
 - **Flexible Backend**: Support for both S3 and HCP Terraform Cloud backends
-- **Security First**: All sensitive credentials handled as secrets
+- **S3 Backend Configuration**: Configurable S3 bucket, region, and key prefix for state storage
+- **Security First**: All sensitive credentials handled as secrets and environment variables
 - **Validation Pipeline**: TFLint → Terraform Validate → Terraform Plan → Terraform Apply
 - **Reusable Design**: Can be called from any repository workflow
 - **Debug Mode**: Built-in debug output for troubleshooting
@@ -29,14 +31,22 @@ The workflow consists of four sequential jobs:
 
 | Input | Description | Type | Required |
 |-------|-------------|------|----------|
-| `cloud-provider` | Target provider (`aws`, `gcp`, `azure`, `snowflake`, `databricks`) | string | ✅ |
+| `cloud-provider` | Target provider (`aws`, `gcp`, `azure`, `snowflake`, `databricks`, `platform`) | string | ✅ |
 | `tflint-ver` | TFLint version to install | string | ✅ |
 
-### Optional Inputs
+### Backend Configuration Inputs
 
 | Input | Description | Type | Default |
 |-------|-------------|------|---------|
 | `backend-type` | Backend type (`s3` or `remote` for HCP Terraform Cloud) | string | `s3` |
+| `s3-bucket` | S3 bucket name for Terraform state (required when backend-type is 's3') | string | - |
+| `s3-region` | AWS region for S3 backend bucket (required when backend-type is 's3') | string | - |
+| `s3-key-prefix` | Optional prefix for the S3 state key | string | `""` |
+
+### Cloud Provider Inputs
+
+| Input | Description | Type | Default |
+|-------|-------------|------|---------|
 | `aws-region` | AWS region for authentication | string | - |
 | `snowflake-account` | Snowflake account identifier | string | - |
 | `snowflake-user` | Snowflake user name | string | - |
@@ -69,15 +79,63 @@ The workflow consists of four sequential jobs:
 | `azure-subscription-id` | Azure subscription ID | `cloud-provider` is `azure` |
 
 ### Snowflake Authentication
-| Secret | Description | Required When |
-|--------|-------------|---------------|
-| `snowflake-private-key` | Snowflake private key for authentication | `cloud-provider` is `snowflake` |
+| Secret | Description | Required When | Environment Variable |
+|--------|-------------|---------------|---------------------|
+| `snowflake-private-key` | Snowflake private key for authentication | `cloud-provider` is `snowflake` | `SNOWFLAKE_PRIVATE_KEY` |
+
+> **Note:** Snowflake credentials (`snowflake-account`, `snowflake-user`, `snowflake-role`, `snowflake-private-key`) are passed as environment variables (`SNOWFLAKE_ACCOUNT`, `SNOWFLAKE_USER`, `SNOWFLAKE_ROLE`, `SNOWFLAKE_PRIVATE_KEY`) to the Terraform provider.
 
 ### Databricks Authentication
-| Secret | Description | Required When |
-|--------|-------------|---------------|
-| `databricks-host` | Databricks workspace URL | `cloud-provider` is `databricks` |
-| `databricks-token` | Databricks personal access token | `cloud-provider` is `databricks` |
+| Secret | Description | Required When | Environment Variable |
+|--------|-------------|---------------|---------------------|
+| `databricks-host` | Databricks workspace URL | `cloud-provider` is `databricks` | `DATABRICKS_HOST` |
+| `databricks-token` | Databricks personal access token | `cloud-provider` is `databricks` | `DATABRICKS_TOKEN` |
+
+> **Note:** Databricks credentials are passed as environment variables (`DATABRICKS_HOST`, `DATABRICKS_TOKEN`) to the Terraform provider.
+
+## 🌐 Platform Mode
+
+When `cloud-provider` is set to `platform`, the workflow automatically:
+
+1. **Detects** all cloud provider directories in `infra/` (aws, gcp, azure, snowflake, databricks)
+2. **Validates** that required inputs/secrets are provided for each detected provider
+3. **Runs** TFLint, Validate, Plan, and Apply for each detected provider sequentially
+
+This is useful for multi-cloud deployments where you want to deploy to all configured providers in a single workflow run.
+
+### Platform Mode Example
+
+```yaml
+name: Deploy to All Platforms
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    uses: subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf/.github/workflows/terraform-deploy.yaml@main
+    with:
+      cloud-provider: platform
+      tflint-ver: v0.52.0
+      backend-type: s3
+      s3-bucket: my-terraform-state-bucket
+      s3-region: us-east-1
+      aws-region: us-east-1
+      snowflake-account: myaccount
+      snowflake-user: terraform_user
+      snowflake-role: TERRAFORM_ROLE
+    secrets:
+      aws-role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+      gcp-wif-provider: ${{ secrets.GCP_WIF_PROVIDER }}
+      gcp-service-account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+      azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+      azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      snowflake-private-key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+      databricks-host: ${{ secrets.DATABRICKS_HOST }}
+      databricks-token: ${{ secrets.DATABRICKS_TOKEN }}
+```
 
 ## 📁 Expected Directory Structure
 
@@ -118,7 +176,7 @@ your-repo/
 
 ## 📖 Usage Examples
 
-### Basic AWS Deployment
+### Basic AWS Deployment with S3 Backend
 
 ```yaml
 name: Deploy to AWS
@@ -134,6 +192,8 @@ jobs:
       cloud-provider: aws
       tflint-ver: v0.52.0
       backend-type: s3
+      s3-bucket: my-terraform-state-bucket
+      s3-region: us-east-1
       aws-region: us-east-1
     secrets:
       aws-role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
@@ -179,6 +239,8 @@ jobs:
       cloud-provider: azure
       tflint-ver: v0.52.0
       backend-type: s3
+      s3-bucket: my-terraform-state-bucket
+      s3-region: us-east-1
     secrets:
       azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
       azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -224,6 +286,8 @@ jobs:
       cloud-provider: databricks
       tflint-ver: v0.52.0
       backend-type: s3
+      s3-bucket: my-terraform-state-bucket
+      s3-region: us-east-1
     secrets:
       databricks-host: ${{ secrets.DATABRICKS_HOST }}
       databricks-token: ${{ secrets.DATABRICKS_TOKEN }}
@@ -250,11 +314,13 @@ jobs:
 - Create a Snowflake user for Terraform
 - Generate RSA key pair for authentication
 - Assign appropriate role and permissions
+- Credentials are passed via environment variables: `SNOWFLAKE_ACCOUNT`, `SNOWFLAKE_USER`, `SNOWFLAKE_ROLE`, `SNOWFLAKE_PRIVATE_KEY`
 
 ### For Databricks
 - Create a Databricks workspace
 - Generate a personal access token
 - Configure workspace permissions
+- Credentials are passed via environment variables: `DATABRICKS_HOST`, `DATABRICKS_TOKEN`
 
 ### For HCP Terraform Cloud
 - Create a Terraform Cloud account
@@ -270,10 +336,13 @@ jobs:
 - Use **OIDC providers** where possible instead of long-lived credentials
 - For Snowflake, use **key-pair authentication** instead of passwords
 - For Databricks, use **service principals** in production environments
+- Snowflake and Databricks credentials are passed as **environment variables** for secure handling
 
 ## 🐛 Debugging
 
 The workflow includes a comprehensive debug step that outputs all inputs and secrets (redacted). Check the "Debug - Print All Inputs" step in the TFLint job to troubleshoot configuration issues.
+
+All sensitive values are displayed as `[REDACTED - PROVIDED]` or `[REDACTED - NOT PROVIDED]` to help verify configuration without exposing actual values.
 
 ## 🤝 Contributing
 
