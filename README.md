@@ -56,7 +56,8 @@ The workflow uses concurrency control to prevent multiple runs from executing si
 | Input | Description | Type | Default |
 |-------|-------------|------|---------|
 | `aws-region` | AWS region for authentication | string | - |
-| `snowflake-account` | Snowflake account identifier | string | - |
+| `snowflake-organization-name` | Snowflake organization name | string | - |
+| `snowflake-account-name` | Snowflake account name within the organization | string | - |
 | `snowflake-user` | Snowflake user name | string | - |
 | `snowflake-role` | Snowflake role name | string | - |
 | `tf-vars-file` | Terraform variables file path | string | `terraform.tfvars` |
@@ -91,7 +92,7 @@ The workflow uses concurrency control to prevent multiple runs from executing si
 |--------|-------------|---------------|---------------------|
 | `snowflake-private-key` | Snowflake private key for authentication | `cloud-provider` is `snowflake` | `SNOWFLAKE_PRIVATE_KEY` |
 
-> **Note:** Snowflake credentials (`snowflake-account`, `snowflake-user`, `snowflake-role`, `snowflake-private-key`) are passed as environment variables (`SNOWFLAKE_ACCOUNT`, `SNOWFLAKE_USER`, `SNOWFLAKE_ROLE`, `SNOWFLAKE_PRIVATE_KEY`) to the Terraform provider.
+> **Note:** Snowflake credentials (`snowflake-organization-name`, `snowflake-account-name`, `snowflake-user`, `snowflake-role`, `snowflake-private-key`) are passed as environment variables (`SNOWFLAKE_ORGANIZATION_NAME`, `SNOWFLAKE_ACCOUNT_NAME`, `SNOWFLAKE_USER`, `SNOWFLAKE_ROLE`, `SNOWFLAKE_PRIVATE_KEY`) to the Terraform provider.
 
 ### Databricks Authentication
 | Secret | Description | Required When | Environment Variable |
@@ -130,7 +131,8 @@ jobs:
       s3-bucket: my-terraform-state-bucket
       s3-region: us-east-1
       aws-region: us-east-1
-      snowflake-account: myaccount
+      snowflake-organization-name: myorg
+      snowflake-account-name: myaccount
       snowflake-user: terraform_user
       snowflake-role: TERRAFORM_ROLE
     secrets:
@@ -271,7 +273,8 @@ jobs:
       cloud-provider: snowflake
       tflint-ver: v0.52.0
       backend-type: remote
-      snowflake-account: myaccount
+      snowflake-organization-name: myorg
+      snowflake-account-name: myaccount
       snowflake-user: terraform_user
       snowflake-role: TERRAFORM_ROLE
     secrets:
@@ -323,7 +326,7 @@ jobs:
 - Create a Snowflake user for Terraform
 - Generate RSA key pair for authentication
 - Assign appropriate role and permissions
-- Credentials are passed via environment variables: `SNOWFLAKE_ACCOUNT`, `SNOWFLAKE_USER`, `SNOWFLAKE_ROLE`, `SNOWFLAKE_PRIVATE_KEY`
+- Credentials are passed via environment variables: `SNOWFLAKE_ORGANIZATION_NAME`, `SNOWFLAKE_ACCOUNT_NAME`, `SNOWFLAKE_USER`, `SNOWFLAKE_ROLE`, `SNOWFLAKE_PRIVATE_KEY`
 
 ### For Databricks
 - Create a Databricks workspace
