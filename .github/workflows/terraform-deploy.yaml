@@ -18,6 +18,7 @@ on:
         description: "TFLint version to install"
         required: true
         type: string
+
       # Backend Type Selection
       backend-type:
         description: "Backend type to use: 's3' for AWS S3 or 'remote' for HCP Terraform Cloud."
@@ -304,9 +305,9 @@ jobs:
           esac
 
       - name: Run TFLint
-        uses: subhamay-bhattacharyya-gha/tf-lint-action@main
+        uses: subhamay-bhattacharyya-gha/tf-lint-action@feature/GHA-0032-rename-github-action-inpu
         with:
-          terraform-dir: infra/${{ inputs.cloud-provider }}/tf
+          tf-config-path: infra/${{ inputs.cloud-provider }}/tf
           tflint-ver: ${{ inputs.tflint-ver }}
           use-cache: "true"
           tflint-format: "compact"
@@ -319,9 +320,9 @@ jobs:
 
     steps:
       - name: Terraform Validate 
-        uses: subhamay-bhattacharyya-gha/tf-validate-action@main
+        uses: subhamay-bhattacharyya-gha/tf-validate-action@feature/GHA-0042-rename-github-action-inpu
         with:
-          terraform-dir: infra/${{ inputs.cloud-provider }}/tf
+          tf-config-path: infra/${{ inputs.cloud-provider }}/tf
 
   terraform-plan:
     name: 🔍 Plan
@@ -342,7 +343,7 @@ jobs:
           SNOWFLAKE_PRIVATE_KEY: ${{ secrets.snowflake-private-key }}
         with:
           cloud-provider: ${{ inputs.cloud-provider }}
-          terraform-dir: infra/${{ inputs.cloud-provider }}/tf
+          tf-config-path: infra/${{ inputs.cloud-provider }}/tf
           backend-type: ${{ inputs.backend-type }}
           s3-bucket: ${{ inputs.s3-bucket }}
           s3-region: ${{ inputs.s3-region }}
@@ -376,7 +377,7 @@ jobs:
           SNOWFLAKE_PRIVATE_KEY: ${{ secrets.snowflake-private-key }}
         with:
           cloud-provider: ${{ inputs.cloud-provider }}
-          terraform-dir: infra/${{ inputs.cloud-provider }}/tf
+          tf-config-path: infra/${{ inputs.cloud-provider }}/tf
           backend-type: ${{ inputs.backend-type }}
           s3-bucket: ${{ inputs.s3-bucket }}
           s3-region: ${{ inputs.s3-region }}
