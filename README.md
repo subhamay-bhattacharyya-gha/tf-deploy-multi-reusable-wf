@@ -34,6 +34,14 @@ The workflow consists of four sequential jobs:
 | `cloud-provider` | Target provider (`aws`, `gcp`, `azure`, `snowflake`, `databricks`, `platform`) | string | ✅ |
 | `tflint-ver` | TFLint version to install | string | ✅ |
 
+### Concurrency Configuration
+
+| Input | Description | Type | Default |
+|-------|-------------|------|---------|
+| `concurrency-group` | Custom concurrency group name for workflow runs | string | `terraform-ci-{cloud-provider}-{ref}` |
+
+The workflow uses concurrency control to prevent multiple runs from executing simultaneously. By default, it creates a concurrency group based on the cloud provider and git ref. You can override this by providing a custom `concurrency-group` value. When a new run starts, any in-progress runs in the same concurrency group are automatically cancelled.
+
 ### Backend Configuration Inputs
 
 | Input | Description | Type | Default |
@@ -195,6 +203,7 @@ jobs:
       s3-bucket: my-terraform-state-bucket
       s3-region: us-east-1
       aws-region: us-east-1
+      concurrency-group: terraform-aws-prod  # Optional: custom concurrency group
     secrets:
       aws-role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
 ```
@@ -326,6 +335,16 @@ jobs:
 - Create a Terraform Cloud account
 - Generate an API token
 - Configure your workspace and variables
+
+## 🔧 Actions Used
+
+| Action | Version/Branch | Purpose |
+|--------|----------------|---------|
+| `actions/checkout` | `@v4` | Checkout repository |
+| `subhamay-bhattacharyya-gha/tf-lint-action` | `@main` | TFLint |
+| `subhamay-bhattacharyya-gha/tf-validate-action` | `@main` | Terraform validate |
+| `subhamay-bhattacharyya-gha/tf-plan-action` | `@feature/GHA-0047-add-platform-based-multi` | Terraform plan |
+| `subhamay-bhattacharyya-gha/tf-apply-action` | `@feature/GHA-0039-add-platform-based-multi` | Terraform apply |
 
 ## 🛡️ Security Best Practices
 
