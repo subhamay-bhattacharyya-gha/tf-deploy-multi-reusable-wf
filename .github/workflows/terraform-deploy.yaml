@@ -305,7 +305,7 @@ jobs:
           esac
 
       - name: Run TFLint
-        uses: subhamay-bhattacharyya-gha/tf-lint-action@feature/GHA-0032-rename-github-action-inpu
+        uses: subhamay-bhattacharyya-gha/tf-lint-action@main
         with:
           tf-config-path: infra/${{ inputs.cloud-provider }}/tf
           tflint-ver: ${{ inputs.tflint-ver }}
