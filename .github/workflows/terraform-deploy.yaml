@@ -368,13 +368,13 @@ jobs:
       - name: Terraform Apply 
         uses: subhamay-bhattacharyya-gha/tf-apply-action@feature/GHA-0039-add-platform-based-multi
         env:
-          DATABRICKS_HOST: ${{ secrets.databricks-host }}
-          DATABRICKS_TOKEN: ${{ secrets.databricks-token }}
-          SNOWFLAKE_ORGANIZATION_NAME: ${{ inputs.snowflake-organization-name }}
-          SNOWFLAKE_ACCOUNT_NAME: ${{ inputs.snowflake-account-name }}
-          SNOWFLAKE_USER: ${{ inputs.snowflake-user }}
-          SNOWFLAKE_ROLE: ${{ inputs.snowflake-role }}
-          SNOWFLAKE_PRIVATE_KEY: ${{ secrets.snowflake-private-key }}
+          TF_VAR_databricks_host: ${{ secrets.databricks-host }}
+          TF_VAR_databricks_token: ${{ secrets.databricks-token }}
+          TF_VAR_snowflake_organization_name: ${{ inputs.snowflake-organization-name }}
+          TF_VAR_snowflake_account_name: ${{ inputs.snowflake-account-name }}
+          TF_VAR_snowflake_user: ${{ inputs.snowflake-user }}
+          TF_VAR_snowflake_role: ${{ inputs.snowflake-role }}
+          TF_VAR_snowflake_private_key: ${{ secrets.snowflake-private-key }}
         with:
           cloud-provider: ${{ inputs.cloud-provider }}
           tf-config-path: infra/${{ inputs.cloud-provider }}/tf
