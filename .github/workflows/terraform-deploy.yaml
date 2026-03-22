@@ -320,7 +320,7 @@ jobs:
 
     steps:
       - name: Terraform Validate 
-        uses: subhamay-bhattacharyya-gha/tf-validate-action@feature/GHA-0042-rename-github-action-inpu
+        uses: subhamay-bhattacharyya-gha/tf-validate-action@main
         with:
           tf-config-path: infra/${{ inputs.cloud-provider }}/tf
 
@@ -354,7 +354,7 @@ jobs:
           echo "$SNOWFLAKE_PRIVATE_KEY" | wc -l
 
       - name: Terraform Plan 
-        uses: subhamay-bhattacharyya-gha/tf-plan-action@feature/GHA-0047-add-platform-based-multi
+        uses: subhamay-bhattacharyya-gha/tf-plan-action@main
         env:
           DATABRICKS_HOST: ${{ secrets.databricks-host }}
           DATABRICKS_TOKEN: ${{ secrets.databricks-token }}
@@ -410,7 +410,7 @@ jobs:
           echo "$SNOWFLAKE_PRIVATE_KEY" | wc -l
 
       - name: Terraform Apply 
-        uses: subhamay-bhattacharyya-gha/tf-apply-action@feature/GHA-0039-add-platform-based-multi
+        uses: subhamay-bhattacharyya-gha/tf-apply-action@main
         env:
           TF_VAR_databricks_host: ${{ secrets.databricks-host }}
           TF_VAR_databricks_token: ${{ secrets.databricks-token }}
