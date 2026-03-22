@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf/compare/v1.1.0...v1.1.1) (2026-03-22)
+
+
+### Bug Fixes
+
+* update tf-validate, tf-plan, and tf-apply actions to use main branch ([f898ff1](https://github.com/subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf/commit/f898ff179812be82d8c6957171f452160fc49332))
+
 # [1.1.0](https://github.com/subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf/compare/v1.0.0...v1.1.0) (2026-03-22)
 
 
