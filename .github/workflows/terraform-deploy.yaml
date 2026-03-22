@@ -3,14 +3,22 @@ name: Terraform Multi-Cloud Deploy
 on:
   workflow_call:
     inputs:
+      # Concurrency group name (optional - allows caller to customize)
+      concurrency-group:
+        description: "Concurrency group name for workflow runs"
+        required: false
+        type: string
+        default: ""
+
       cloud-provider:
-        description: "Target cloud provider (aws, gcp, azure, snowflake, databricks)"
+        description: "Target cloud provider or platform (aws, gcp, azure, snowflake, databricks, platform)"
         required: true
         type: string
       tflint-ver:
         description: "TFLint version to install"
         required: true
         type: string
+
       # Backend Type Selection
       backend-type:
         description: "Backend type to use: 's3' for AWS S3 or 'remote' for HCP Terraform Cloud."
@@ -42,8 +50,13 @@ on:
         type: string
 
       # Snowflake Authentication Inputs
-      snowflake-account:
-        description: "Snowflake account identifier. Required when cloud-provider is 'snowflake'."
+      snowflake-organization-name:
+        description: "Snowflake organization name. Required when cloud-provider is 'snowflake'."
+        required: false
+        type: string
+
+      snowflake-account-name:
+        description: "Snowflake account name within the organization. Required when cloud-provider is 'snowflake'."
         required: false
         type: string
 
@@ -56,11 +69,6 @@ on:
         description: "Snowflake role name. Required when cloud-provider is 'snowflake'."
         required: false
         type: string
-
-      # (snowflake-private-key moved to secrets section)
-
-      # Databricks Authentication Inputs
-      # (databricks-host and databricks-token moved to secrets section)
 
       # Terraform artifacts
       tf-vars-file:
@@ -115,9 +123,12 @@ on:
         description: "Databricks personal access token. Required when cloud-provider is 'databricks'."
         required: false
 
+concurrency:
+  group: ${{ inputs.concurrency-group || format('terraform-ci-{0}-{1}', inputs.cloud-provider, github.ref) }}
+  cancel-in-progress: true
 jobs:
   terraform-lint:
-    name: ⚙️ TFLint - ${{ inputs.cloud-provider }}
+    name: ⚙️ TFLint
     runs-on: ubuntu-latest
     
     steps:
@@ -151,7 +162,8 @@ jobs:
           echo "azure-subscription-id: [REDACTED - $(if [[ -n '${{ secrets.azure-subscription-id }}' ]]; then echo 'PROVIDED'; else echo 'NOT PROVIDED'; fi)]"
           echo ""
           echo "=== Snowflake Authentication Inputs ==="
-          echo "snowflake-account: [REDACTED - $(if [[ -n '${{ inputs.snowflake-account }}' ]]; then echo 'PROVIDED'; else echo 'NOT PROVIDED'; fi)]"
+          echo "snowflake-organization-name: [REDACTED - $(if [[ -n '${{ inputs.snowflake-organization-name }}' ]]; then echo 'PROVIDED'; else echo 'NOT PROVIDED'; fi)]"
+          echo "snowflake-account-name: [REDACTED - $(if [[ -n '${{ inputs.snowflake-account-name }}' ]]; then echo 'PROVIDED'; else echo 'NOT PROVIDED'; fi)]"
           echo "snowflake-user: [REDACTED - $(if [[ -n '${{ inputs.snowflake-user }}' ]]; then echo 'PROVIDED'; else echo 'NOT PROVIDED'; fi)]"
           echo "snowflake-role: [REDACTED - $(if [[ -n '${{ inputs.snowflake-role }}' ]]; then echo 'PROVIDED'; else echo 'NOT PROVIDED'; fi)]"
           echo "snowflake-private-key: [REDACTED - $(if [[ -n '${{ secrets.snowflake-private-key }}' ]]; then echo 'PROVIDED'; else echo 'NOT PROVIDED'; fi)]"
@@ -167,6 +179,20 @@ jobs:
         id: validate-config
         shell: bash
         run: |
+          # Validate backend-type input
+          if [[ "${{ inputs.backend-type }}" != "s3" && "${{ inputs.backend-type }}" != "remote" ]]; then
+            echo "Error: Invalid backend-type '${{ inputs.backend-type }}'. Must be either 's3' or 'remote'"
+            exit 1
+          fi
+          echo "✅ Valid backend-type: ${{ inputs.backend-type }}"
+
+          # Validate cloud-provider input
+          if [[ "${{ inputs.cloud-provider }}" != "aws" && "${{ inputs.cloud-provider }}" != "gcp" && "${{ inputs.cloud-provider }}" != "azure" && "${{ inputs.cloud-provider }}" != "snowflake" && "${{ inputs.cloud-provider }}" != "databricks" && "${{ inputs.cloud-provider }}" != "platform" ]]; then
+            echo "Error: Invalid cloud-provider '${{ inputs.cloud-provider }}'. Must be one of: aws, gcp, azure, snowflake, databricks, platform"
+            exit 1
+          fi
+          echo "✅ Valid cloud-provider: ${{ inputs.cloud-provider }}"
+
           # Validate backend configuration
           if [[ "${{ inputs.backend-type }}" == "s3" ]]; then
             if [[ -z "${{ inputs.s3-bucket }}" || -z "${{ inputs.s3-region }}" ]]; then
@@ -179,9 +205,6 @@ jobs:
               exit 1
             fi
             echo "Using existing backend configuration from Terraform files"
-          else
-            echo "Error: backend-type must be either 's3' or 'remote'"
-            exit 1
           fi
 
           # Validate cloud provider configuration
@@ -205,8 +228,8 @@ jobs:
               fi
               ;;
             "snowflake")
-              if [[ -z "${{ inputs.snowflake-account }}" || -z "${{ inputs.snowflake-user }}" || -z "${{ inputs.snowflake-role }}" || -z "${{ secrets.snowflake-private-key }}" ]]; then
-                echo "Error: snowflake-account, snowflake-user, snowflake-role, and snowflake-private-key are required when cloud-provider is 'snowflake'"
+              if [[ -z "${{ inputs.snowflake-organization-name }}" || -z "${{ inputs.snowflake-account-name }}" || -z "${{ inputs.snowflake-user }}" || -z "${{ inputs.snowflake-role }}" || -z "${{ secrets.snowflake-private-key }}" ]]; then
+                echo "Error: snowflake-organization-name, snowflake-account-name, snowflake-user, snowflake-role, and snowflake-private-key are required when cloud-provider is 'snowflake'"
                 exit 1
               fi
               ;;
@@ -216,47 +239,133 @@ jobs:
                 exit 1
               fi
               ;;
-            *)
-              echo "Error: cloud-provider must be 'aws', 'gcp', 'azure', 'snowflake', or 'databricks'"
-              exit 1
+            "platform")
+              echo "Platform mode: Checking for cloud provider directories in infra/"
+              VALIDATION_ERRORS=""
+
+              # Check for AWS directory
+              if [[ -d "infra/aws" ]]; then
+                echo "Found infra/aws directory - validating AWS inputs..."
+                if [[ -z "${{ inputs.aws-region }}" || -z "${{ secrets.aws-role-to-assume }}" ]]; then
+                  VALIDATION_ERRORS="${VALIDATION_ERRORS}\n- AWS: aws-region and aws-role-to-assume are required"
+                else
+                  echo "  ✅ AWS inputs validated"
+                fi
+              fi
+
+              # Check for GCP directory
+              if [[ -d "infra/gcp" ]]; then
+                echo "Found infra/gcp directory - validating GCP inputs..."
+                if [[ -z "${{ secrets.gcp-wif-provider }}" || -z "${{ secrets.gcp-service-account }}" ]]; then
+                  VALIDATION_ERRORS="${VALIDATION_ERRORS}\n- GCP: gcp-wif-provider and gcp-service-account are required"
+                else
+                  echo "  ✅ GCP inputs validated"
+                fi
+              fi
+
+              # Check for Azure directory
+              if [[ -d "infra/azure" ]]; then
+                echo "Found infra/azure directory - validating Azure inputs..."
+                if [[ -z "${{ secrets.azure-client-id }}" || -z "${{ secrets.azure-tenant-id }}" || -z "${{ secrets.azure-subscription-id }}" ]]; then
+                  VALIDATION_ERRORS="${VALIDATION_ERRORS}\n- Azure: azure-client-id, azure-tenant-id, and azure-subscription-id are required"
+                else
+                  echo "  ✅ Azure inputs validated"
+                fi
+              fi
+
+              # Check for Snowflake directory
+              if [[ -d "infra/snowflake" ]]; then
+                echo "Found infra/snowflake directory - validating Snowflake inputs..."
+                if [[ -z "${{ inputs.snowflake-organization-name }}" || -z "${{ inputs.snowflake-account-name }}" || -z "${{ inputs.snowflake-user }}" || -z "${{ inputs.snowflake-role }}" || -z "${{ secrets.snowflake-private-key }}" ]]; then
+                  VALIDATION_ERRORS="${VALIDATION_ERRORS}\n- Snowflake: snowflake-organization-name, snowflake-account-name, snowflake-user, snowflake-role, and snowflake-private-key are required"
+                else
+                  echo "  ✅ Snowflake inputs validated"
+                fi
+              fi
+
+              # Check for Databricks directory
+              if [[ -d "infra/databricks" ]]; then
+                echo "Found infra/databricks directory - validating Databricks inputs..."
+                if [[ -z "${{ secrets.databricks-host }}" || -z "${{ secrets.databricks-token }}" ]]; then
+                  VALIDATION_ERRORS="${VALIDATION_ERRORS}\n- Databricks: databricks-host and databricks-token are required"
+                else
+                  echo "  ✅ Databricks inputs validated"
+                fi
+              fi
+
+              # Check if any validation errors occurred
+              if [[ -n "$VALIDATION_ERRORS" ]]; then
+                echo ""
+                echo "Error: Missing required inputs for detected platforms:"
+                echo -e "$VALIDATION_ERRORS"
+                exit 1
+              fi
+              echo "All detected platform inputs validated successfully"
               ;;
           esac
 
       - name: Run TFLint
         uses: subhamay-bhattacharyya-gha/tf-lint-action@main
         with:
-          terraform-dir: infra/${{ inputs.cloud-provider }}/tf
+          tf-config-path: infra/${{ inputs.cloud-provider }}/tf
           tflint-ver: ${{ inputs.tflint-ver }}
           use-cache: "true"
           tflint-format: "compact"
 
   terraform-validate:
-    name: ✅ Validate - ${{ inputs.cloud-provider }}
+    name: ✅ Validate
     runs-on: ubuntu-latest
     needs: 
       - terraform-lint
 
     steps:
       - name: Terraform Validate 
-        uses: subhamay-bhattacharyya-gha/tf-validate-action@main
+        uses: subhamay-bhattacharyya-gha/tf-validate-action@feature/GHA-0042-rename-github-action-inpu
         with:
-          terraform-dir: infra/${{ inputs.cloud-provider }}/tf
+          tf-config-path: infra/${{ inputs.cloud-provider }}/tf
 
   terraform-plan:
-    name: 🔍 Plan - ${{ inputs.cloud-provider }}
+    name: 🔍 Plan
     runs-on: ubuntu-latest
     needs: 
       - terraform-validate
 
     steps:
+      - name: Set Snowflake Private Key
+        run: |
+          printf '%b' "${{ secrets.snowflake-private-key }}" > /tmp/snowflake_key.p8
+          echo "SNOWFLAKE_PRIVATE_KEY<<EOF" >> $GITHUB_ENV
+          cat /tmp/snowflake_key.p8 >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Debug Key Format
+        run: |
+          echo "First 50 chars of key:"
+          echo "${SNOWFLAKE_PRIVATE_KEY:0:50}"
+          echo "---"
+          echo "Key contains literal backslash-n: "
+          if [[ "$SNOWFLAKE_PRIVATE_KEY" == *'\\n'* ]]; then
+            echo "YES - problem found"
+          else
+            echo "NO"
+          fi
+          echo "---"
+          echo "Line count:"
+          echo "$SNOWFLAKE_PRIVATE_KEY" | wc -l
+
       - name: Terraform Plan 
-        uses: subhamay-bhattacharyya-gha/tf-plan-action@main
+        uses: subhamay-bhattacharyya-gha/tf-plan-action@feature/GHA-0047-add-platform-based-multi
         env:
           DATABRICKS_HOST: ${{ secrets.databricks-host }}
           DATABRICKS_TOKEN: ${{ secrets.databricks-token }}
+          SNOWFLAKE_ORGANIZATION_NAME: ${{ inputs.snowflake-organization-name }}
+          SNOWFLAKE_ACCOUNT_NAME: ${{ inputs.snowflake-account-name }}
+          SNOWFLAKE_USER: ${{ inputs.snowflake-user }}
+          SNOWFLAKE_ROLE: ${{ inputs.snowflake-role }}
+          SNOWFLAKE_PRIVATE_KEY: ${{ env.SNOWFLAKE_PRIVATE_KEY }} 
         with:
           cloud-provider: ${{ inputs.cloud-provider }}
-          terraform-dir: infra/${{ inputs.cloud-provider }}/tf
+          tf-config-path: infra/${{ inputs.cloud-provider }}/tf
           backend-type: ${{ inputs.backend-type }}
           s3-bucket: ${{ inputs.s3-bucket }}
           s3-region: ${{ inputs.s3-region }}
@@ -269,29 +378,50 @@ jobs:
           azure-client-id: ${{ secrets.azure-client-id }}
           azure-tenant-id: ${{ secrets.azure-tenant-id }}
           azure-subscription-id: ${{ secrets.azure-subscription-id }}
-          snowflake-account: ${{ inputs.snowflake-account }}
-          snowflake-user: ${{ inputs.snowflake-user }}
-          snowflake-role: ${{ inputs.snowflake-role }}
-          snowflake-private-key: ${{ secrets.snowflake-private-key }}
-          databricks-host: ${{ secrets.databricks-host }}
-          databricks-token: ${{ secrets.databricks-token }}
           tf-vars-file: ${{ inputs.tf-vars-file }}
 
   terraform-apply:
-    name: 🚀 Apply - ${{ inputs.cloud-provider }}
+    name: 🚀 Apply
     runs-on: ubuntu-latest
     needs: 
       - terraform-plan
 
     steps:
+      - name: Set Snowflake Private Key
+        run: |
+          printf '%b' "${{ secrets.snowflake-private-key }}" > /tmp/snowflake_key.p8
+          echo "SNOWFLAKE_PRIVATE_KEY<<EOF" >> $GITHUB_ENV
+          cat /tmp/snowflake_key.p8 >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Debug Key Format
+        run: |
+          echo "First 50 chars of key:"
+          echo "${SNOWFLAKE_PRIVATE_KEY:0:50}"
+          echo "---"
+          echo "Key contains literal backslash-n: "
+          if [[ "$SNOWFLAKE_PRIVATE_KEY" == *'\\n'* ]]; then
+            echo "YES - problem found"
+          else
+            echo "NO"
+          fi
+          echo "---"
+          echo "Line count:"
+          echo "$SNOWFLAKE_PRIVATE_KEY" | wc -l
+
       - name: Terraform Apply 
-        uses: subhamay-bhattacharyya-gha/tf-apply-action@main
+        uses: subhamay-bhattacharyya-gha/tf-apply-action@feature/GHA-0039-add-platform-based-multi
         env:
-          DATABRICKS_HOST: ${{ secrets.databricks-host }}
-          DATABRICKS_TOKEN: ${{ secrets.databricks-token }}
+          TF_VAR_databricks_host: ${{ secrets.databricks-host }}
+          TF_VAR_databricks_token: ${{ secrets.databricks-token }}
+          SNOWFLAKE_ORGANIZATION_NAME: ${{ inputs.snowflake-organization-name }}
+          SNOWFLAKE_ACCOUNT_NAME: ${{ inputs.snowflake-account-name }}
+          SNOWFLAKE_USER: ${{ inputs.snowflake-user }}
+          SNOWFLAKE_ROLE: ${{ inputs.snowflake-role }}
+          SNOWFLAKE_PRIVATE_KEY: ${{ env.SNOWFLAKE_PRIVATE_KEY }}
         with:
           cloud-provider: ${{ inputs.cloud-provider }}
-          terraform-dir: infra/${{ inputs.cloud-provider }}/tf
+          tf-config-path: infra/${{ inputs.cloud-provider }}/tf
           backend-type: ${{ inputs.backend-type }}
           s3-bucket: ${{ inputs.s3-bucket }}
           s3-region: ${{ inputs.s3-region }}
@@ -304,10 +434,4 @@ jobs:
           azure-client-id: ${{ secrets.azure-client-id }}
           azure-tenant-id: ${{ secrets.azure-tenant-id }}
           azure-subscription-id: ${{ secrets.azure-subscription-id }}
-          snowflake-account: ${{ inputs.snowflake-account }}
-          snowflake-user: ${{ inputs.snowflake-user }}
-          snowflake-role: ${{ inputs.snowflake-role }}
-          snowflake-private-key: ${{ secrets.snowflake-private-key }}
-          databricks-host: ${{ secrets.databricks-host }}
-          databricks-token: ${{ secrets.databricks-token }}
           tf-vars-file: ${{ inputs.tf-vars-file }}
