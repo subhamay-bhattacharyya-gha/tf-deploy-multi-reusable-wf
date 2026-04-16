@@ -331,12 +331,24 @@ jobs:
       - terraform-validate
 
     steps:
-      - name: Set Snowflake Private Key
+      - name: Export Snowflake private key to GITHUB_ENV
+        shell: bash
+        env:
+          SNOWFLAKE_PRIVATE_KEY: ${{ secrets.snowflake-private-key }}
         run: |
-          printf '%b' "${{ secrets.snowflake-private-key }}" > /tmp/snowflake_key.p8
-          echo "SNOWFLAKE_PRIVATE_KEY<<EOF" >> $GITHUB_ENV
-          cat /tmp/snowflake_key.p8 >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          set -euo pipefail
+
+          KEY_FILE="/tmp/snowflake_key.p8"
+          printf '%b\n' "${SNOWFLAKE_PRIVATE_KEY}" > "${KEY_FILE}"
+          chmod 600 "${KEY_FILE}"
+
+          DELIM="EOF_$(openssl rand -hex 16)"
+          {
+            echo "SNOWFLAKE_PRIVATE_KEY<<${DELIM}"
+            cat "${KEY_FILE}"
+            echo ""
+            echo "${DELIM}"
+          } >> "${GITHUB_ENV}"
 
       - name: Debug Key Format
         run: |
@@ -353,7 +365,7 @@ jobs:
           echo "Line count:"
           echo "$SNOWFLAKE_PRIVATE_KEY" | wc -l
 
-      - name: Terraform Plan 
+      - name: Terraform Plan
         uses: subhamay-bhattacharyya-gha/tf-plan-action@main
         env:
           DATABRICKS_HOST: ${{ secrets.databricks-host }}
@@ -387,12 +399,24 @@ jobs:
       - terraform-plan
 
     steps:
-      - name: Set Snowflake Private Key
+      - name: Export Snowflake private key to GITHUB_ENV
+        shell: bash
+        env:
+          SNOWFLAKE_PRIVATE_KEY: ${{ secrets.snowflake-private-key }}
         run: |
-          printf '%b' "${{ secrets.snowflake-private-key }}" > /tmp/snowflake_key.p8
-          echo "SNOWFLAKE_PRIVATE_KEY<<EOF" >> $GITHUB_ENV
-          cat /tmp/snowflake_key.p8 >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          set -euo pipefail
+
+          KEY_FILE="/tmp/snowflake_key.p8"
+          printf '%b\n' "${SNOWFLAKE_PRIVATE_KEY}" > "${KEY_FILE}"
+          chmod 600 "${KEY_FILE}"
+
+          DELIM="EOF_$(openssl rand -hex 16)"
+          {
+            echo "SNOWFLAKE_PRIVATE_KEY<<${DELIM}"
+            cat "${KEY_FILE}"
+            echo ""
+            echo "${DELIM}"
+          } >> "${GITHUB_ENV}"
 
       - name: Debug Key Format
         run: |
@@ -409,7 +433,7 @@ jobs:
           echo "Line count:"
           echo "$SNOWFLAKE_PRIVATE_KEY" | wc -l
 
-      - name: Terraform Apply 
+      - name: Terraform Apply
         uses: subhamay-bhattacharyya-gha/tf-apply-action@main
         env:
           TF_VAR_databricks_host: ${{ secrets.databricks-host }}
