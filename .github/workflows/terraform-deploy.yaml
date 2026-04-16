@@ -423,7 +423,7 @@ jobs:
           echo "First 50 chars of key:"
           echo "${SNOWFLAKE_PRIVATE_KEY:0:50}"
           echo "---"
-          echo "Key contains literal backslash-n: "
+          echo "Key contains literal backslash-n: "generate 
           if [[ "$SNOWFLAKE_PRIVATE_KEY" == *'\\n'* ]]; then
             echo "YES - problem found"
           else
@@ -433,8 +433,14 @@ jobs:
           echo "Line count:"
           echo "$SNOWFLAKE_PRIVATE_KEY" | wc -l
 
+      - name: Download Terraform Plan Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-plan
+          path: infra/${{ inputs.cloud-provider }}/tf
+
       - name: Terraform Apply
-        uses: subhamay-bhattacharyya-gha/tf-apply-action@main
+        uses: subhamay-bhattacharyya-gha/tf-apply-action@bug/GHA-0050-fix-plan-file-mismatch
         env:
           TF_VAR_databricks_host: ${{ secrets.databricks-host }}
           TF_VAR_databricks_token: ${{ secrets.databricks-token }}
